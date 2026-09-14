@@ -1,4 +1,4 @@
-# 🚀 Expenses Tracker — Enterprise DevSecOps & GitOps Pipeline
+# Expenses Tracker — Enterprise DevSecOps & GitOps Pipeline
 
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Argo CD](https://img.shields.io/badge/GitOps-Argo%20CD-EF6C00?style=for-the-badge&logo=argo&logoColor=white)](https://argoproj.github.io/cd/)
@@ -13,21 +13,21 @@ This repository operates as a unified, single-source-of-truth GitOps repository 
 
 ---
 
-## 📸 Executive Visual Summary
+## Executive Visual Summary
 
-### 🐙 GitOps Control Plane (Argo CD)
+### GitOps Control Plane (Argo CD)
 | Application Health Status | Live Cluster Topology Tree |
 | :---: | :---: |
 | ![Argo CD Healthy Card](assets/argocd_healthy_card.png) | ![Argo CD Topology Tree](assets/argocd_topology_tree.png) |
 
-### 💳 Expenses Tracker Web Interface
+### Expenses Tracker Web Interface
 | Application Landing & About | Add Expense Screen |
 | :---: | :---: |
 | ![Expenses Tracker Homepage](assets/app_homepage.png) | ![Add Expense Screen](assets/app_add_expense.png) |
 
 ---
 
-## 🏗️ Architecture & DevSecOps Workflow
+## Architecture & DevSecOps Workflow
 
 ```mermaid
 graph TD
