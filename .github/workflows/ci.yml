@@ -1,44 +1,93 @@
-name: GitOps CI — Kustomize Build & Security Scan
+name: GitOps CI/CD — Build, Scan, Push & Deploy
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'screenshots/**'
+      - 'LICENSE'
+      - 'ci-workflow-for-app-repo/**'
   workflow_dispatch:
 
+env:
+  DOCKER_IMAGE: sudarshan0907/expenses-tracker
+
 jobs:
-  validate-and-scan:
-    name: Validate Manifests & Security Scan
+  build-scan-and-deploy:
+    name: Build Java, Scan Image, Push to Docker Hub & Update GitOps
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout repository code
+      - name: Checkout repository code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GIT_TOKEN || github.token }}
 
-      - name: Set up Kustomize
-        uses: imranismail/setup-kustomize@v2
+      # 2. Set up Java JDK 17
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Validate Kustomize Base Build
+      # 3. Run Java Unit Tests
+      - name: Run Maven Unit Tests
+        run: mvn test -B
+
+      # 4. Build Application JAR
+      - name: Build Application JAR
+        run: mvn package -DskipTests -B
+
+      # 5. Extract short Git SHA
+      - name: Set short Git SHA
+        id: vars
+        run: echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      # 6. Build Docker Image
+      - name: Build Docker image
         run: |
-          echo "=== Testing Kustomize Base Build ==="
-          kustomize build base/
+          docker build -t ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }} .
+          docker tag ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }} ${{ env.DOCKER_IMAGE }}:latest
 
-      - name: Validate Kustomize Kind Overlay Build
-        run: |
-          echo "=== Testing Kustomize Kind Overlay Build ==="
-          kustomize build overlays/kind/
-
-      - name: Run Trivy Security Scan on Kubernetes Manifests
+      # 7. Trivy Vulnerability Security Scan
+      - name: Run Trivy vulnerability scan on Docker image
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          scan-type: 'config'
-          hide-shortcut-text: 'true'
+          image-ref: '${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }}'
           format: 'table'
-          exit-code: '0'
           severity: 'CRITICAL,HIGH'
+          exit-code: '0'
 
-      - name: Verify Argo CD Application Manifest
+      # 8. Login to Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 9. Push Docker Image to Docker Hub
+      - name: Push Docker image to Docker Hub
         run: |
-          echo "=== Verifying Argo CD Application YAML ==="
-          cat argocd/application.yaml
+          docker push ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }}
+          docker push ${{ env.DOCKER_IMAGE }}:latest
+
+      # 10. Update Kustomize manifest with new image tag & Push to GitOps Repo
+      - name: Update Kustomize manifest & Push GitOps change
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # Update the newTag in base/kustomization.yaml
+          sed -i "s|newTag:.*|newTag: ${{ steps.vars.outputs.SHORT_SHA }}|" base/kustomization.yaml
+
+          # Commit change if modified
+          if ! git diff --quiet base/kustomization.yaml; then
+            git add base/kustomization.yaml
+            git commit -m "ci: update image tag to ${{ steps.vars.outputs.SHORT_SHA }} [skip ci]"
+            git push origin main
+          else
+            echo "No image tag change needed."
+          fi
