@@ -39,7 +39,7 @@ spec:
             - -c
             - |
               echo "Waiting for MySQL to be ready..."
-              until nc -z -w 3 mysql 3306 || nc -z -w 3 mysql.expenses.svc.cluster.local 3306; do
+              until (echo > /dev/tcp/mysql.expenses.svc.cluster.local/3306) 2>/dev/null || (echo > /dev/tcp/mysql/3306) 2>/dev/null; do
                 echo "MySQL is not ready yet — sleeping 2s"
                 sleep 2
               done
