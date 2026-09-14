@@ -6,6 +6,22 @@ This repository contains **both the application source code and declarative Kust
 
 ---
 
+## 📸 Screenshots & Live UI
+
+### 🐙 Argo CD GitOps Dashboard & Application Topology
+| Argo CD Application Health Status | GitOps Live Topology Tree |
+| :---: | :---: |
+| ![Argo CD Healthy Card](assets/argocd_healthy_card.png) | ![Argo CD Topology Tree](assets/argocd_topology_tree.png) |
+
+---
+
+### 💳 Expenses Tracker Web Application
+| Landing & About Page | Add Expense Screen |
+| :---: | :---: |
+| ![Expenses Tracker Homepage](assets/app_homepage.png) | ![Add Expense Screen](assets/app_add_expense.png) |
+
+---
+
 ## 🏗️ Architecture Overview
 
 ```mermaid
@@ -57,6 +73,11 @@ Expenses-Tracker-GitOps/
 │   └── ci.yml                 # Automated CI/CD, Trivy scan & GitOps tag updater
 ├── argocd/
 │   └── application.yaml       # Argo CD Application CRD definition
+├── assets/                    # Screenshots and architecture diagrams
+│   ├── app_add_expense.png
+│   ├── app_homepage.png
+│   ├── argocd_healthy_card.png
+│   └── argocd_topology_tree.png
 ├── base/
 │   ├── app-deployment.yaml   # Spring Boot Deployment (2 Replicas, SecurityContext, Probes)
 │   ├── app-service.yaml      # ClusterIP Service for Spring Boot
@@ -75,19 +96,33 @@ Expenses-Tracker-GitOps/
 
 ---
 
-## 🔑 Required GitHub Repository Secrets
+## 📖 How to Use the Application (Step-by-Step User Guide)
 
-To enable the full automated CI/CD pipeline, add these secrets in your GitHub Repository under **Settings → Secrets and variables → Actions**:
+### 1. Access the Application
+Open your browser and navigate to:
+👉 **[http://localhost:8088](http://localhost:8088)**
 
-| Secret Name | Value Description |
-| :--- | :--- |
-| `DOCKERHUB_USERNAME` | Your Docker Hub Username (`sudarshan0907`) |
-| `DOCKERHUB_TOKEN` | Docker Hub Personal Access Token (`dckr_pat_...`) |
-| `GIT_TOKEN` | GitHub Personal Access Token (Classic with `repo` scope) |
+### 2. Sign Up a New User Account
+1. Click on **SIGN UP** in the top navigation bar.
+2. Enter your Full Name, Email Address, and Password.
+3. Click **Submit** to register your account.
+
+### 3. Sign In to Your Dashboard
+1. Click on **SIGN IN** in the top navigation bar.
+2. Log in using your registered Email and Password.
+
+### 4. Add & Track Expenses
+1. Click **ADD EXPENSE** in the navbar.
+2. Select an Expense Category (e.g. *Groceries, Bills, Entertainment, Travel*).
+3. Enter the Amount spent, Date & Time, and a short Description.
+4. Click **Submit** to record the transaction into MySQL.
+
+### 5. View Expense Reports
+1. Click **SHOW EXPENSES** to view all recorded transactions formatted cleanly in your table dashboard.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Deployment & Operations Guide
 
 ### 1. Prerequisites
 Ensure you have installed:
@@ -111,19 +146,19 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 kubectl apply -f argocd/application.yaml
 ```
 
-### 5. Access Dashboards & Application
-- **Argo CD Dashboard**:
-  ```bash
-  kubectl port-forward svc/argocd-server -n argocd 8443:443
-  ```
-  👉 **`https://localhost:8443`**  
-  *(Username: `admin` \| Get Password: `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`)*
+### 5. Access Dashboards & Port Forwarding
 
-- **Expenses Tracker Web App**:
+* **Argo CD UI**:
   ```bash
-  kubectl port-forward svc/expenses-tracker -n expenses 9090:80
+  kubectl port-forward svc/argocd-server -n argocd 8443:80 --address 0.0.0.0
   ```
-  👉 **`http://localhost:9090`**
+  👉 Open: **[http://localhost:8443](http://localhost:8443)**
+
+* **Expenses Tracker Web App**:
+  ```bash
+  kubectl port-forward svc/expenses-tracker -n expenses 8088:80 --address 0.0.0.0
+  ```
+  👉 Open: **[http://localhost:8088](http://localhost:8088)**
 
 ---
 
