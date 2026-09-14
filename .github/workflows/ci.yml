@@ -1,0 +1,44 @@
+name: GitOps CI — Kustomize Build & Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-and-scan:
+    name: Validate Manifests & Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Validate Kustomize Base Build
+        run: |
+          echo "=== Testing Kustomize Base Build ==="
+          kustomize build base/
+
+      - name: Validate Kustomize Kind Overlay Build
+        run: |
+          echo "=== Testing Kustomize Kind Overlay Build ==="
+          kustomize build overlays/kind/
+
+      - name: Run Trivy Security Scan on Kubernetes Manifests
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          hide-shortcut-text: 'true'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Verify Argo CD Application Manifest
+        run: |
+          echo "=== Verifying Argo CD Application YAML ==="
+          cat argocd/application.yaml
