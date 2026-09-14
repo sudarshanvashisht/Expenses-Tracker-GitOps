@@ -24,6 +24,11 @@ spec:
         app.kubernetes.io/component: backend
         app.kubernetes.io/part-of: expenses-tracker
     spec:
+      # Pod-level security: no privilege escalation across the pod
+      securityContext:
+        runAsNonRoot: false   # Set to true if Dockerfile uses a non-root user
+        fsGroup: 1000
+
       # Wait for MySQL to be ready before starting the app
       initContainers:
         - name: wait-for-mysql
@@ -38,6 +43,9 @@ spec:
                 sleep 5
               done
               echo "MySQL is ready!"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           resources:
             requests:
               memory: "16Mi"
@@ -45,6 +53,7 @@ spec:
             limits:
               memory: "32Mi"
               cpu: "50m"
+
       containers:
         - name: expenses-tracker
           image: sudarshan0907/expenses-tracker:latest
@@ -65,8 +74,15 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: mysql-root-password
-          # Using TCP socket probes since actuator is not in the original app.
-          # For production, add spring-boot-starter-actuator and use HTTP /actuator/health
+
+          # Container-level security hardening
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          # Health probes (TCP since actuator is not in the original app)
           readinessProbe:
             tcpSocket:
               port: 8080
@@ -81,6 +97,7 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 3
+
           resources:
             requests:
               memory: "256Mi"
