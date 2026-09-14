@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: expenses
+  labels:
+    app.kubernetes.io/name: mysql
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: expenses-tracker
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: mysql
+  selector:
+    app.kubernetes.io/name: mysql
+  # ClusterIP — not exposed externally. Only accessible within the cluster.
+  # Spring Boot connects via: jdbc:mysql://mysql:3306/expenses_tracker

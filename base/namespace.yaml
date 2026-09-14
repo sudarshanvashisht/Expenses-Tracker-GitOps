@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: expenses
+  labels:
+    app.kubernetes.io/part-of: expenses-tracker
+    app.kubernetes.io/managed-by: argocd

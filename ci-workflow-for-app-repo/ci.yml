@@ -1,0 +1,94 @@
+name: CI — Build, Scan & Push to Docker Hub + Update GitOps
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'screenshots/**'
+      - 'LICENSE'
+  workflow_dispatch:   # Allow manual triggers
+
+env:
+  DOCKER_IMAGE: sudarshan0907/expenses-tracker
+  GITOPS_REPO: sudarshanvashisht/Expenses-Tracker-GitOps
+
+jobs:
+  build-and-push:
+    name: Build, Test, Scan & Push
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─────────────── CHECKOUT ───────────────
+      - name: Checkout application source
+        uses: actions/checkout@v4
+
+      # ─────────────── JAVA SETUP ───────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ─────────────── MAVEN TEST ───────────────
+      - name: Run Maven tests
+        run: mvn test -B
+
+      # ─────────────── MAVEN BUILD ───────────────
+      - name: Build application JAR
+        run: mvn package -DskipTests -B
+
+      # ─────────────── DOCKER BUILD ───────────────
+      - name: Set short Git SHA
+        id: vars
+        run: echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }} .
+          docker tag ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }} ${{ env.DOCKER_IMAGE }}:latest
+
+      # ─────────────── SECURITY SCAN ───────────────
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }}'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'   # Don't fail the build — report only (change to '1' for strict mode)
+
+      # ─────────────── DOCKER HUB PUSH ───────────────
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ env.DOCKER_IMAGE }}:${{ steps.vars.outputs.SHORT_SHA }}
+          docker push ${{ env.DOCKER_IMAGE }}:latest
+
+      # ─────────────── UPDATE GITOPS REPO ───────────────
+      - name: Update GitOps repository with new image tag
+        run: |
+          # Clone the GitOps repository
+          git clone https://x-access-token:${{ secrets.GIT_TOKEN }}@github.com/${{ env.GITOPS_REPO }}.git gitops-repo
+          cd gitops-repo/base
+
+          # Update the image tag in kustomization.yaml
+          sed -i "s|newTag:.*|newTag: ${{ steps.vars.outputs.SHORT_SHA }}|" kustomization.yaml
+
+          # Commit and push
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add kustomization.yaml
+          git commit -m "ci: update image tag to ${{ steps.vars.outputs.SHORT_SHA }}
+
+          Triggered by commit: ${{ github.sha }}
+          Repository: ${{ github.repository }}
+          Workflow: ${{ github.workflow }}"
+          git push
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}

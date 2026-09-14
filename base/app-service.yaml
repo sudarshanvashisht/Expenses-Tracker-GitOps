@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: expenses-tracker
+  namespace: expenses
+  labels:
+    app.kubernetes.io/name: expenses-tracker
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: expenses-tracker
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: expenses-tracker
