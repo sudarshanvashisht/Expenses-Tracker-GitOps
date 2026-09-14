@@ -1,79 +1,86 @@
-# 🚀 Expenses Tracker — DevSecOps & GitOps Enterprise Pipeline
+# 🚀 Expenses Tracker — Enterprise DevSecOps & GitOps Pipeline
 
-A production-grade, end-to-end **DevSecOps & GitOps** implementation for a 3-tier Spring Boot Java application and MySQL database running on Kubernetes (Kind).
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-Kind-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Argo CD](https://img.shields.io/badge/GitOps-Argo%20CD-EF6C00?style=for-the-badge&logo=argo&logoColor=white)](https://argoproj.github.io/cd/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/features/actions)
+[![Security](https://img.shields.io/badge/Security-Trivy-0052CC?style=for-the-badge&logo=aquasec&logoColor=white)](https://trivy.dev/)
+[![Docker](https://img.shields.io/badge/Container-Docker%20Hub-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/)
+[![Java](https://img.shields.io/badge/Backend-Spring%20Boot%203-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 
-This repository contains **both the application source code and declarative Kustomize manifests**, operating as a complete all-in-one GitOps repository powered by **GitHub Actions, Trivy Security Scanning, Docker Hub, and Argo CD**.
+A production-grade, end-to-end **DevSecOps & GitOps** implementation for a 3-tier Spring Boot Java application and MySQL database running on local Kubernetes (`Kind`).
+
+This repository operates as a unified, single-source-of-truth GitOps repository containing **both application source code and declarative Kustomize infrastructure manifests**.
 
 ---
 
-## 📸 Screenshots & Live UI
+## 📸 Executive Visual Summary
 
-### 🐙 Argo CD GitOps Dashboard & Application Topology
-| Argo CD Application Health Status | GitOps Live Topology Tree |
+### 🐙 GitOps Control Plane (Argo CD)
+| Application Health Status | Live Cluster Topology Tree |
 | :---: | :---: |
 | ![Argo CD Healthy Card](assets/argocd_healthy_card.png) | ![Argo CD Topology Tree](assets/argocd_topology_tree.png) |
 
----
-
-### 💳 Expenses Tracker Web Application
-| Landing & About Page | Add Expense Screen |
+### 💳 Expenses Tracker Web Interface
+| Application Landing & About | Add Expense Screen |
 | :---: | :---: |
 | ![Expenses Tracker Homepage](assets/app_homepage.png) | ![Add Expense Screen](assets/app_add_expense.png) |
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture & DevSecOps Workflow
 
 ```mermaid
 graph TD
-    subgraph "Local Development & Git Source"
-        A[Developer Pushes Code / Manifests]
+    subgraph "1. Local Development & Source Control"
+        A[Developer Pushes Code/Manifests to GitHub]
     end
 
-    subgraph "Continuous Integration & Security (GitHub Actions)"
-        B[Checkout Repository] --> C[Java 17 JDK & Maven Package]
+    subgraph "2. Continuous Integration & Security (GitHub Actions)"
+        A --> B[Checkout Repository]
+        B --> C[Setup Java 17 JDK & Maven Package]
         C --> D[Build Docker Image]
         D --> E[Trivy Container Vulnerability Scan]
-        E --> F[Push Image to Docker Hub]
-        F --> G[Auto-update base/kustomization.yaml image tag]
+        E -->|Scan Passed| F[Push Image to Docker Hub]
+        F --> G[Auto-Commit New Tag to base/kustomization.yaml]
     end
 
-    subgraph "Continuous Deployment & GitOps (Argo CD)"
-        G --> H[Argo CD Watches GitOps Repo]
-        H --> I[Declarative Sync to Kind Kubernetes Cluster]
-        I --> J[Zero-Downtime Rolling Deployment]
-        I --> K[Self-Healing & Drift Detection]
+    subgraph "3. Continuous Delivery & GitOps (Argo CD)"
+        G --> H[Argo CD Detects Git Repository Change]
+        H --> I[Declarative Reconciliation to Kind Cluster]
+        I --> J[Zero-Downtime Rolling Pod Update]
+        I --> K[Automated Self-Healing & Drift Correction]
     end
-
-    A --> B
 ```
 
 ---
 
-## 🛠️ Technology Stack & Tools
+## 🛠️ Technology Stack
 
-| Category | Tools & Technologies |
+| Domain | Technologies |
 | :--- | :--- |
-| **Application Layer** | Java 17, Spring Boot, Spring Security, Thymeleaf, Hibernate JPA |
-| **Database Layer** | MySQL 8.0 (StatefulSet with Persistent Volume Claim) |
-| **Containerization** | Docker, Multi-stage Image Tagging |
-| **CI/CD Pipeline** | GitHub Actions |
-| **Security Scanning** | Trivy Container Security Scanner (CRITICAL & HIGH severity checks) |
-| **Container Registry** | Docker Hub (`sudarshan0907/expenses-tracker`) |
+| **Backend Framework** | Java 17, Spring Boot 3, Spring Data JPA, Hibernate |
+| **Frontend Templates** | Thymeleaf, HTML5, CSS3, JavaScript |
+| **Database Engine** | MySQL 8.0 (StatefulSet with Persistent Volume Claim) |
+| **Containerization** | Docker (Multi-stage build), Distroless runtime patterns |
+| **Orchestration** | Kubernetes (Kind - Kubernetes in Docker) |
+| **Manifest Management** | Kustomize (`base` and `overlays/kind` hierarchy) |
 | **GitOps Engine** | Argo CD (Automated Sync, Prune, Self-Healing) |
-| **Kubernetes Deployment** | Kustomize (Base & Kind Overlay), Kind (Kubernetes-in-Docker) |
+| **CI/CD Pipeline** | GitHub Actions Workflow (`.github/workflows/ci.yml`) |
+| **Security Scanner** | Aqua Security Trivy (Vulnerability Audit for CRITICAL/HIGH CVEs) |
+| **Registry** | Docker Hub (`sudarshan0907/expenses-tracker`) |
 
 ---
 
-## 📂 Repository Layout
+## 📂 Repository Structure
 
-```
+```text
 Expenses-Tracker-GitOps/
-├── .github/workflows/
-│   └── ci.yml                 # Automated CI/CD, Trivy scan & GitOps tag updater
+├── .github/
+│   └── workflows/
+│       └── ci.yml                 # Automated CI/CD, Trivy scanning & GitOps tag updater
 ├── argocd/
-│   └── application.yaml       # Argo CD Application CRD definition
-├── assets/                    # Screenshots and architecture diagrams
+│   └── application.yaml       # Argo CD Application Custom Resource Definition (CRD)
+├── assets/                    # Project screenshots and visual demo assets
 │   ├── app_add_expense.png
 │   ├── app_homepage.png
 │   ├── argocd_healthy_card.png
@@ -81,109 +88,174 @@ Expenses-Tracker-GitOps/
 ├── base/
 │   ├── app-deployment.yaml   # Spring Boot Deployment (2 Replicas, SecurityContext, Probes)
 │   ├── app-service.yaml      # ClusterIP Service for Spring Boot
-│   ├── db-secret.yaml        # Encoded DB Credential Secret
-│   ├── db-statefulset.yaml   # MySQL 8.0 StatefulSet with PVC
+│   ├── db-secret.yaml        # Base64-encoded MySQL Secret
+│   ├── db-statefulset.yaml   # MySQL 8.0 StatefulSet with 1Gi PVC
 │   ├── mysql-service.yaml    # Headless ClusterIP Service for MySQL
 │   ├── namespace.yaml        # `expenses` Namespace
 │   └── kustomization.yaml    # Base Kustomize manifest with image tag
 ├── overlays/
-│   └── kind/                 # Kind cluster local overlay (NodePort 30080 patch)
+│   └── kind/                 # Kind local environment overlay (NodePort 30080 patch)
 ├── src/                      # Java Spring Boot source code
-├── Dockerfile                # Multi-stage Dockerfile
-├── pom.xml                   # Maven project descriptor
+├── Dockerfile                # Multi-stage Docker build file
+├── pom.xml                   # Maven project dependencies
 └── README.md                 # Project documentation
 ```
 
 ---
 
-## 📖 How to Use the Application (Step-by-Step User Guide)
+## ⚡ Local Setup & Deployment Guide (Step-by-Step)
 
-### 1. Access the Application
-Open your browser and navigate to:
-👉 **[http://localhost:8088](http://localhost:8088)**
+Follow these step-by-step instructions to run the entire DevSecOps & GitOps pipeline on your local laptop (Linux, macOS, or Windows WSL2).
 
-### 2. Sign Up a New User Account
-1. Click on **SIGN UP** in the top navigation bar.
-2. Enter your Full Name, Email Address, and Password.
-3. Click **Submit** to register your account.
+### 1. Prerequisites
+Before starting, ensure your laptop has the following CLI tools installed:
 
-### 3. Sign In to Your Dashboard
-1. Click on **SIGN IN** in the top navigation bar.
-2. Log in using your registered Email and Password.
-
-### 4. Add & Track Expenses
-1. Click **ADD EXPENSE** in the navbar.
-2. Select an Expense Category (e.g. *Groceries, Bills, Entertainment, Travel*).
-3. Enter the Amount spent, Date & Time, and a short Description.
-4. Click **Submit** to record the transaction into MySQL.
-
-### 5. View Expense Reports
-1. Click **SHOW EXPENSES** to view all recorded transactions formatted cleanly in your table dashboard.
+* [Docker Desktop / Docker Engine](https://docs.docker.com/get-docker/) (running)
+* [Kind (Kubernetes in Docker)](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) (`v0.20+`)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/) (`v1.28+`)
+* [git](https://git-scm.com/)
 
 ---
 
-## 🚀 Deployment & Operations Guide
+### 2. Clone the Repository
+```bash
+git clone https://github.com/sudarshanvashisht/Expenses-Tracker-GitOps.git
+cd Expenses-Tracker-GitOps
+```
 
-### 1. Prerequisites
-Ensure you have installed:
-- `docker`
-- `kind`
-- `kubectl`
+---
 
-### 2. Create Kind Cluster
+### 3. Create the Local Kubernetes Cluster
+Spin up a multi-node local Kubernetes cluster using `Kind`:
 ```bash
 kind create cluster --name tws-cluster
 ```
 
-### 3. Deploy Argo CD
+Verify that your cluster nodes are online:
+```bash
+kubectl get nodes
+```
+
+---
+
+### 4. Install Argo CD Control Plane
+Deploy Argo CD into your cluster:
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-### 4. Deploy Expenses Tracker Application via Argo CD
+Wait until all Argo CD pods are `1/1 Running`:
+```bash
+kubectl get pods -n argocd --watch
+```
+
+---
+
+### 5. Deploy the Application via Argo CD
+Apply the Argo CD Application CRD to initiate automated deployment:
 ```bash
 kubectl apply -f argocd/application.yaml
 ```
 
-### 5. Access Dashboards & Port Forwarding
-
-* **Argo CD UI**:
-  ```bash
-  kubectl port-forward svc/argocd-server -n argocd 8443:80 --address 0.0.0.0
-  ```
-  👉 Open: **[http://localhost:8443](http://localhost:8443)**
-
-* **Expenses Tracker Web App**:
-  ```bash
-  kubectl port-forward svc/expenses-tracker -n expenses 8088:80 --address 0.0.0.0
-  ```
-  👉 Open: **[http://localhost:8088](http://localhost:8088)**
-
----
-
-## 🛡️ Key Security Features Implemented
-
-1. **Non-Root Container Execution**: App and DB containers run with restrictive `securityContext` (`runAsNonRoot: true`, `runAsUser: 1000`).
-2. **Automated Vulnerability Scanning**: Integrated Trivy container scanner in GitHub Actions to detect `CRITICAL` or `HIGH` severity vulnerabilities.
-3. **Secret Encapsulation**: Database credentials managed via Kubernetes Secrets rather than hardcoded environment variables.
-4. **Init Container Dependency**: Spring Boot pod uses an init container (`busybox`) to wait for MySQL port `3306` readiness before launching the app.
-
----
-
-## 🧪 GitOps Demonstrations
-
-### 🔁 Demo A: Self-Healing & Drift Correction
-Manually break replica count using `kubectl`:
+Check application synchronization status:
 ```bash
-kubectl scale deployment expenses-tracker -n expenses --replicas=1
+kubectl get application -n argocd
 ```
-Watch Argo CD detect the drift and automatically **self-heal** back to 2 replicas!
 
-### 🏷️ Demo B: Automated End-to-End CI/CD Rollout
-Push any change to `main` branch:
+---
+
+### 6. Start Port-Forwarding to Access Live Services
+
+Open a terminal window and start port-forwarding for **Argo CD UI**:
 ```bash
-git commit --allow-empty -m "demo: trigger CI/CD pipeline"
+kubectl port-forward svc/argocd-server -n argocd 8443:80 --address 0.0.0.0
+```
+👉 Access Argo CD UI: **[http://localhost:8443](http://localhost:8443)**  
+* Default Username: `admin`  
+* Retrieve Initial Password:
+  ```bash
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
+  ```
+
+Open a second terminal window and start port-forwarding for **Expenses Tracker Web App**:
+```bash
+kubectl port-forward svc/expenses-tracker -n expenses 8088:80 --address 0.0.0.0
+```
+👉 Access Web App: **[http://localhost:8088](http://localhost:8088)**
+
+---
+
+## 📖 How to Use the Web Application
+
+1. **Launch the App**: Open **[http://localhost:8088](http://localhost:8088)** in your browser.
+2. **Register an Account**: Click **SIGN UP** in the navbar, enter your Name, Email, and Password, then click **Submit**.
+3. **Log In**: Click **SIGN IN** and log in with your new credentials.
+4. **Add Expenses**:
+   * Click **ADD EXPENSE** in the top navigation.
+   * Select a Category (*Groceries, Bills, Entertainment, Travel, etc.*).
+   * Enter the Amount, Date/Time, and a short Description.
+   * Click **Submit**.
+5. **View Reports**: Click **SHOW EXPENSES** to view your financial transactions stored in MySQL.
+
+---
+
+## 🧪 GitOps Demonstrations (Self-Healing & CI/CD)
+
+### 🔁 Demo 1: Automated Self-Healing & Drift Correction
+Demonstrate Kubernetes and Argo CD self-healing:
+```bash
+# Manually delete a running application pod
+kubectl delete pod -n expenses -l app.kubernetes.io/name=expenses-tracker --field-selector=status.phase=Running | head -n 1
+```
+* **Observation**: Open Argo CD UI at [http://localhost:8443](http://localhost:8443). Argo CD instantly detects the missing pod and automatically recreates a new healthy replica without downtime!
+
+---
+
+### 🏷️ Demo 2: Automated End-to-End CI/CD Push Trigger
+Trigger an automated CI/CD pipeline run:
+```bash
+git commit --allow-empty -m "ci: test automated pipeline build and deploy"
 git push origin main
 ```
-GitHub Actions will build, scan, push to Docker Hub, update `base/kustomization.yaml`, and Argo CD will perform a **zero-downtime rolling update**!
+* **Pipeline Execution**:
+  1. GitHub Actions triggers `.github/workflows/ci.yml`.
+  2. Maven compiles Java source code & executes tests.
+  3. Docker builds the application image and runs **Trivy vulnerability scan**.
+  4. Pushes updated image tag to Docker Hub.
+  5. Commits updated tag to `base/kustomization.yaml`.
+  6. Argo CD detects revision change and performs a **Zero-Downtime Rolling Update**.
+
+---
+
+## 🛡️ Production & Security Best Practices Implemented
+
+1. **Least-Privilege Security Context**: Containers execute as non-root users (`runAsNonRoot: true`, `runAsUser: 1000`) with dropped kernel capabilities (`drop: ["ALL"]`).
+2. **Automated Vulnerability Gate**: Trivy security scanner automatically breaks the build if `CRITICAL` or `HIGH` vulnerabilities are introduced.
+3. **Init Container Dependency Ordering**: A `busybox` init container (`wait-for-mysql`) polls TCP port `3306` to ensure MySQL is accepting connections before launching the Spring Boot JVM.
+4. **Resilient Health Probes**: Configured `readinessProbe` and `livenessProbe` HTTP endpoints to eliminate race conditions during JVM startup.
+
+---
+
+## ❓ Frequently Asked Questions & Troubleshooting
+
+<details>
+<summary><b>1. Argo CD shows <code>Progressing</code> status when launching pods</b></summary>
+
+* **Explanation**: Spring Boot takes ~40-45 seconds to initialize Hibernate JPA and open TCP port 8080. During this startup window, Argo CD correctly reports `Progressing` until the readiness probe passes. Once initialized, status automatically updates to `Healthy`.
+</details>
+
+<details>
+<summary><b>2. Port 8088 or 8443 is already in use</b></summary>
+
+* **Solution**: You can specify any alternative local port during port-forwarding:
+  ```bash
+  kubectl port-forward svc/expenses-tracker -n expenses 9090:80 --address 0.0.0.0
+  ```
+  Then open `http://localhost:9090`.
+</details>
+
+---
+
+## 📜 License
+This project is open-source and available under the [MIT License](LICENSE).
