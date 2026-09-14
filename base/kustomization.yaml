@@ -18,4 +18,4 @@ resources:
 
 images:
   - name: sudarshan0907/expenses-tracker
-    newTag: 05efae0
+    newTag: a7a6624
