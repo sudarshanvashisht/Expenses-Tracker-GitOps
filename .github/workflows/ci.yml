@@ -10,6 +10,9 @@ on:
       - 'ci-workflow-for-app-repo/**'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   DOCKER_IMAGE: sudarshan0907/expenses-tracker
 
@@ -22,8 +25,6 @@ jobs:
       # 1. Checkout repository code
       - name: Checkout repository code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GIT_TOKEN || github.token }}
 
       # 2. Set up Java JDK 17
       - name: Set up JDK 17
@@ -87,7 +88,7 @@ jobs:
           if ! git diff --quiet base/kustomization.yaml; then
             git add base/kustomization.yaml
             git commit -m "ci: update image tag to ${{ steps.vars.outputs.SHORT_SHA }} [skip ci]"
-            git push origin main
+            git push https://x-access-token:${{ secrets.GIT_TOKEN || secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
           else
             echo "No image tag change needed."
           fi
