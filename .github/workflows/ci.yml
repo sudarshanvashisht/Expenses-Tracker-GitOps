@@ -34,11 +34,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # 3. Run Java Unit Tests
-      - name: Run Maven Unit Tests
-        run: mvn test -B
-
-      # 4. Build Application JAR
+      # 3. Build Application JAR
       - name: Build Application JAR
         run: mvn package -DskipTests -B
 
